@@ -18,7 +18,7 @@
             "input", "textInput",
             "propertychange",
             "paste", "cut",
-            "keydown", "keyup",
+            "keydown", /*"keyup",*/
             "drop",
         ""].join(ns),
         // Events required for delegate, mostly for IE support
