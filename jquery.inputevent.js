@@ -35,7 +35,7 @@
     };
 
     $.event.special.txtinput = {
-        setup: function(data, namespaces, handler) {
+        setup: function(data, namespaces, handler, onChangeOnly) {
             var timer,
                 bndCount,
                 // Get references to the element
@@ -50,7 +50,7 @@
                     $elem.bind(bindTo, handler);
 
                 $.data(elem, dataBnd, ++bndCount);
-                $.data(elem, dataVal, elem.value);
+                $.data(elem, dataVal, elem.value || elem.innerText);
             } else {
                 $elem.bind(dlgtTo, function (e) {
                     var target = e.target;
@@ -65,7 +65,7 @@
                         // make sure we increase the count only once for each bound ancestor
                         $.data(elem, dataDlg, true);
                         $.data(target, dataBnd, ++bndCount);
-                        $.data(target, dataVal, target.value);
+                        $.data(target, dataVal, target.value || target.innerText);
                     }
                 });
             }
@@ -83,16 +83,17 @@
                 if (e.type in delay && !timer) {
                     // ...so we need to delay them until after the event has fired
                     timer = window.setTimeout(function () {
-                        if (elem.value !== $.data(elem, dataVal)) {
+                        if ((elem.value !== undefined && elem.value !== $.data(elem, dataVal)) || 
+                            (elem.value === undefined && elem.innerText !== $.data(elem, dataVal))) {
                             $(elem).trigger("txtinput");
-                            $.data(elem, dataVal, elem.value);
+                            $.data(elem, dataVal, elem.value || elem.innerText);
                         }
                     }, 0);
                 }
                 else if (e.type == "propertychange") {
                     if (e.originalEvent.propertyName == "value") {
                         $(elem).trigger("txtinput");
-                        $.data(elem, dataVal, elem.value);
+                        $.data(elem, dataVal, elem.value || elem.innerText);
                         triggered = true;
                         window.setTimeout(function () {
                             triggered = false;
@@ -100,12 +101,20 @@
                     }
                 }
                 else {
+                    var change = onChangeOnly !== undefined ? onChangeOnly :
+                        $.fn.input.settings.onChangeOnly;
+                    if ((elem.value !== undefined && $.data(elem, dataVal) === elem.value) ||
+                        (elem.value === undefined && $.data(elem, dataVal) === elem.innerText)) {
+                        if (change)
+                            return;
+                    }
+
                     $(elem).trigger("txtinput");
-                    $.data(elem, dataVal, elem.value);
+                    $.data(elem, dataVal, elem.value || elem.innerText);
                     triggered = true;
                     window.setTimeout(function () {
                         triggered = false;
-                    }, 0);
+                }, 0);
                 }
             }
         },
@@ -125,4 +134,9 @@
     $.fn.input = function (handler) {
         return handler ? $(this).bind("txtinput", handler) : this.trigger("txtinput");
     }
+    
+    $.fn.input.settings = {
+        onChangeOnly: false
+    };
+    
 })(jQuery);
