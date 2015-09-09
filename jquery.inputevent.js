@@ -50,7 +50,7 @@
                     $elem.bind(bindTo, handler);
 
                 $.data(elem, dataBnd, ++bndCount);
-                $.data(elem, dataVal, elem.value || elem.innerText);
+                $.data(elem, dataVal, elem.value || elem.innerText || elem.textContent);
             } else {
                 $elem.bind(dlgtTo, function (e) {
                     var target = e.target;
@@ -65,7 +65,7 @@
                         // make sure we increase the count only once for each bound ancestor
                         $.data(elem, dataDlg, true);
                         $.data(target, dataBnd, ++bndCount);
-                        $.data(target, dataVal, target.value || target.innerText);
+                        $.data(target, dataVal, target.value || target.innerText || elem.textContent);
                     }
                 });
             }
@@ -84,16 +84,17 @@
                     // ...so we need to delay them until after the event has fired
                     timer = window.setTimeout(function () {
                         if ((elem.value !== undefined && elem.value !== $.data(elem, dataVal)) || 
-                            (elem.value === undefined && elem.innerText !== $.data(elem, dataVal))) {
+                            (elem.value === undefined && elem.innerText !== undefined && elem.innerText !== $.data(elem, dataVal)) || 
+                            (elem.value === undefined && elem.innerText === undefined && elem.textContent !== $.data(elem, dataVal))) {
                             $(elem).trigger("txtinput");
-                            $.data(elem, dataVal, elem.value || elem.innerText);
+                            $.data(elem, dataVal, elem.value || elem.innerText || elem.textContent);
                         }
                     }, 0);
                 }
                 else if (e.type == "propertychange") {
                     if (e.originalEvent.propertyName == "value") {
                         $(elem).trigger("txtinput");
-                        $.data(elem, dataVal, elem.value || elem.innerText);
+                        $.data(elem, dataVal, elem.value || elem.innerText || elem.textContent);
                         triggered = true;
                         window.setTimeout(function () {
                             triggered = false;
@@ -104,13 +105,14 @@
                     var change = onChangeOnly !== undefined ? onChangeOnly :
                         $.fn.input.settings.onChangeOnly;
                     if ((elem.value !== undefined && $.data(elem, dataVal) === elem.value) ||
-                        (elem.value === undefined && $.data(elem, dataVal) === elem.innerText)) {
+                        (elem.value === undefined && elem.innerText !== undefined && $.data(elem, dataVal) === elem.innerText) ||
+                        (elem.value === undefined && elem.innerText === undefined && $.data(elem, dataVal) === elem.textContent)) {
                         if (change)
                             return;
                     }
 
                     $(elem).trigger("txtinput");
-                    $.data(elem, dataVal, elem.value || elem.innerText);
+                    $.data(elem, dataVal, elem.value || elem.innerText || elem.textContent);
                     triggered = true;
                     window.setTimeout(function () {
                         triggered = false;
